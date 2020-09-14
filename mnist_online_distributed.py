@@ -8,11 +8,12 @@ import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
 import snn.utils.filters as filters
-from snn.utils.utils_snn import refractory_period
+from snn.utils.utils_snn import refractory_period, get_acc_and_loss
 from snn.utils.misc import save_results
+from snn.data_preprocessing.load_data import get_example
 
 from utils.training_fl_snn import feedforward_sampling, local_feedback_and_update
-from utils.distributed_utils import init_processes, init_training, global_update, global_update_subset, get_acc_and_loss, init_test
+from utils.distributed_utils import init_processes, init_training, global_update, global_update_subset, init_test
 
 """"
 
@@ -41,7 +42,7 @@ def train_fixed_rate(rank, num_nodes, net_params, args):
 
         for _ in range(args.num_ite):
             # Initialize main parameters for training
-            network, indices_local, weights_list, eligibility_trace, et_temp, learning_signal, ls_temp = init_training(rank, num_nodes, all_nodes, dataset, labels, net_params)
+            network, indices_local, weights_list, eligibility_trace, et_temp, learning_signal, ls_temp = init_training(rank, num_nodes, all_nodes, args)
             samples_indices_train = np.random.choice(indices_local, [args.num_samples_train], replace=True)
 
             # Gradients accumulator
@@ -74,7 +75,8 @@ def train_fixed_rate(rank, num_nodes, net_params, args):
                     dist.barrier(all_nodes)
 
             if rank == 0:
-                global_acc, _ = get_acc_and_loss(network, args.dataset, test_indices)
+                global_acc, _ = get_acc_and_loss(network, test_data, test_indices, args.T, args.n_classes,
+                                                 args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
                 test_dict[tau].append(global_acc)
                 save_results(test_dict, test_save_path)
                 print('Tau: %d, final accuracy: %f' % (tau, global_acc))
@@ -109,7 +111,8 @@ def train(rank, num_nodes, args):
         if rank != 0:
             print('Node %d' % rank, indices_local)
         else:
-            acc, _ = get_acc_and_loss(network, args.dataset, test_indices)
+            acc, _ = get_acc_and_loss(network, test_data, test_indices, args.T, args.n_classes,
+                                      args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
             test_dict[0].append(acc)
             network.train()
 
@@ -119,7 +122,8 @@ def train(rank, num_nodes, args):
             if rank == 0:
                 if s % S_prime == 0:
                     if (1 + (s // S_prime)) % args.test_interval == 0:
-                        acc, _ = get_acc_and_loss(network, args.dataset, test_indices)
+                        acc, _ = get_acc_and_loss(network, test_data, test_indices, args.T, args.n_classes,
+                                                  args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
                         test_dict[1 + (s // S_prime)].append(acc)
                         network.train()
                         print('Acc at step %d : %f' % (s, acc))
@@ -154,11 +158,13 @@ def train(rank, num_nodes, args):
         dist.barrier(all_nodes)
 
         if rank == 0:
-            global_acc, _ = get_acc_and_loss(network, args.dataset, test_indices)
+            global_acc, _ = get_acc_and_loss(network, test_data, test_indices, args.T, args.n_classes,
+                                             args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
             print('Iteration: %d, final accuracy: %f' % (i, global_acc))
             test_dict[args.num_samples_train].append(global_acc)
         else:
-            _, loss = get_acc_and_loss(network, args.dataset, test_indices)
+            _, loss = get_acc_and_loss(network, test_data, test_indices, args.T, args.n_classes,
+                                       args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
             test_dict[args.num_samples_train].append(loss)
         save_results(test_dict, test_save_path)
 
@@ -225,6 +231,7 @@ if __name__ == "__main__":
     args.n_output_neurons = 10
     args.n_hidden_neurons = args.n_hidden_neurons
     args.n_neurons = args.n_input_neurons + args.n_output_neurons + args.n_hidden_neurons
+    args.n_classes = args.dataset.root.stats.test_label[1]
 
     filters_dict = {'base_ff_filter': filters.base_filter, 'cosine_basis': filters.cosine_basis,
                     'raised_cosine': filters.raised_cosine, 'raised_cosine_pillow_05': filters.raised_cosine_pillow_05, 'raised_cosine_pillow_08': filters.raised_cosine_pillow_08}
