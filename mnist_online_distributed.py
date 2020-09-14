@@ -226,7 +226,7 @@ if __name__ == "__main__":
     args.n_hidden_neurons = args.n_hidden_neurons
     args.n_neurons = args.n_input_neurons + args.n_output_neurons + args.n_hidden_neurons
 
-    filters_dict = {'base_ff_filter': filters.base_feedforward_filter, 'base_fb_filter': filters.base_feedback_filter, 'cosine_basis': filters.cosine_basis,
+    filters_dict = {'base_ff_filter': filters.base_filter, 'cosine_basis': filters.cosine_basis,
                     'raised_cosine': filters.raised_cosine, 'raised_cosine_pillow_05': filters.raised_cosine_pillow_05, 'raised_cosine_pillow_08': filters.raised_cosine_pillow_08}
 
     tau = args.tau
