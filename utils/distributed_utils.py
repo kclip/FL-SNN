@@ -22,8 +22,8 @@ def init_test(rank, args):
     args.num_samples_test = args.dataset.root.stats.test_data[0]
     if args.labels is not None:
         print(args.labels)
-        num_samples_test = min(args.num_samples_test, len(find_indices_for_labels(args.dataset.root.test, args.labels)))
-        test_indices = np.random.choice(find_indices_for_labels(args.dataset.root.test, args.labels), [num_samples_test], replace=False)
+        num_samples_test = min(args.num_samples_test, len(misc.find_indices_for_labels(args.dataset.root.test, args.labels)))
+        test_indices = np.random.choice(misc.find_indices_for_labels(args.dataset.root.test, args.labels), [num_samples_test], replace=False)
     else:
         test_indices = np.random.choice(np.arange(args.dataset.root.stats.test_data[0]), [args.num_samples_test], replace=False)
         args.labels = [i for i in range(10)]
@@ -120,11 +120,11 @@ def distribute_samples(nodes, rank, args):
         num_samples_per_class = int(args.num_samples_train / (len(args.labels)/2))
 
         for i, label in enumerate(args.labels[:int(len(args.labels)/2)]):
-            indices_i = np.asarray(torch.max(torch.sum(torch.FloatTensor(args.dataset.root.train.label[:]), dim=-1), dim=-1).indices == label).nonzero()[0]
-            indices_worker_0[i * num_samples_per_class: (i + 1) * num_samples_per_class] = np.random.choice(indices_i, [num_samples_per_class], replace=True)
+            indices_worker_0[i * num_samples_per_class: (i + 1) * num_samples_per_class] =\
+                np.random.choice(misc.find_indices_for_labels(args.dataset.root.train, label), [num_samples_per_class], replace=True)
         for i, label in enumerate(args.labels[int(len(args.labels)/2):]):
-            indices_i = np.asarray(torch.max(torch.sum(torch.FloatTensor(args.dataset.root.train.label[:]), dim=-1), dim=-1).indices == label).nonzero()[0]
-            indices_worker_1[i * num_samples_per_class: (i + 1) * num_samples_per_class] = np.random.choice(indices_i, [num_samples_per_class], replace=True)
+            indices_worker_1[i * num_samples_per_class: (i + 1) * num_samples_per_class] =\
+                np.random.choice(misc.find_indices_for_labels(args.dataset.root.train, label), [num_samples_per_class], replace=True)
 
 
         # Send samples to the workers
@@ -192,13 +192,6 @@ def global_update_subset(nodes, rank, network, weights_list, gradients_accum, n_
         dist.broadcast(network.get_parameters()[parameter], 0, group=nodes)
 
 
-def find_indices_for_labels(hdf5_group, labels):
-    res = []
-    for label in labels:
-        res.append(np.where(np.argmax(np.sum(hdf5_group.label[:], axis=-1), axis=-1) == label)[0])
-    return np.hstack(res)
-
-
 def get_acc_and_loss(network, dataset, test_indices):
     """"
     Compute loss and accuracy on the indices from the dataset precised as arguments
@@ -223,7 +216,8 @@ def get_acc_and_loss(network, dataset, test_indices):
 
     predictions = torch.max(torch.sum(outputs, dim=-1), dim=-1).indices
     true_classes = torch.max(torch.sum(torch.FloatTensor(dataset.root.test.label[:][test_indices]), dim=-1), dim=-1).indices
-
+    print(predictions[:10])
+    print(true_classes[:10])
     acc = float(torch.sum(predictions == true_classes, dtype=torch.float) / len(predictions))
 
     return acc, loss
