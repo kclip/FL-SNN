@@ -121,10 +121,10 @@ def distribute_samples(nodes, rank, args):
 
         for i, label in enumerate(args.labels[:int(len(args.labels)/2)]):
             indices_worker_0[i * num_samples_per_class: (i + 1) * num_samples_per_class] =\
-                np.random.choice(misc.find_indices_for_labels(args.dataset.root.train, label), [num_samples_per_class], replace=True)
+                np.random.choice(misc.find_indices_for_labels(args.dataset.root.train, [label]), [num_samples_per_class], replace=True)
         for i, label in enumerate(args.labels[int(len(args.labels)/2):]):
             indices_worker_1[i * num_samples_per_class: (i + 1) * num_samples_per_class] =\
-                np.random.choice(misc.find_indices_for_labels(args.dataset.root.train, label), [num_samples_per_class], replace=True)
+                np.random.choice(misc.find_indices_for_labels(args.dataset.root.train, [label]), [num_samples_per_class], replace=True)
 
 
         # Send samples to the workers
