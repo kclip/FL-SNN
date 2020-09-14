@@ -32,8 +32,8 @@ def train_fixed_rate(rank, num_nodes, net_params, args):
     train_data = args.dataset.root.train
     test_data = args.dataset.root.test
 
-    S_prime = int(args.sample_length * 1000 / args.dt)
-    S = args.num_samples_train * S_prime
+    args.S_prime = int(args.sample_length * 1000 / args.dt)
+    S = args.num_samples_train * args.S_prime
 
     args, test_indices, test_dict, test_save_path = init_test(rank, args)
 
@@ -51,9 +51,9 @@ def train_fixed_rate(rank, num_nodes, net_params, args):
 
             for s in range(S):
                 if rank != 0:
-                    if s % S_prime == 0:  # Reset internal state for each example
+                    if s % args.S_prime == 0:  # Reset internal state for each example
                         refractory_period(network)
-                        inputs, label = get_example(train_data, s // S_prime, S_prime, args.n_classes, args.input_shape, args.dt, args.dataset.root.stats.train_data[1],
+                        inputs, label = get_example(train_data, s // args.S_prime, args.S_prime, args.n_classes, args.input_shape, args.dt, args.dataset.root.stats.train_data[1],
                                                     args.polarity)
                         sample = torch.cat((inputs, label), dim=0).to(network.device)
 
@@ -62,7 +62,7 @@ def train_fixed_rate(rank, num_nodes, net_params, args):
                     #     args.lr /= 2
 
                     # Feedforward sampling
-                    log_proba, ls_temp, et_temp, gradients_accum = feedforward_sampling(network, sample[:, s % S_prime], ls_temp, et_temp, args, gradients_accum)
+                    log_proba, ls_temp, et_temp, gradients_accum = feedforward_sampling(network, sample[:, s % args.S_prime], ls_temp, et_temp, args, gradients_accum)
 
                     # Local feedback and update
                     eligibility_trace, et_temp, learning_signal, ls_temp = local_feedback_and_update(network, eligibility_trace, et_temp, learning_signal, ls_temp, s, args)
@@ -75,7 +75,7 @@ def train_fixed_rate(rank, num_nodes, net_params, args):
                     dist.barrier(all_nodes)
 
             if rank == 0:
-                global_acc, _ = get_acc_and_loss(network, test_data, test_indices, args.T, args.n_classes,
+                global_acc, _ = get_acc_and_loss(network, test_data, test_indices, args.S_prime, args.n_classes,
                                                  args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
                 test_dict[tau].append(global_acc)
                 save_results(test_dict, test_save_path)
@@ -97,8 +97,8 @@ def train(rank, num_nodes, args):
     train_data = args.dataset.root.train
     test_data = args.dataset.root.test
 
-    S_prime = int(args.sample_length * 1000 / args.dt)
-    S = args.num_samples_train * S_prime
+    args.S_prime = int(args.sample_length * 1000 / args.dt)
+    S = args.num_samples_train * args.S_prime
 
     args, test_indices, test_dict, test_save_path = init_test(rank, args)
 
@@ -112,7 +112,7 @@ def train(rank, num_nodes, args):
         if rank != 0:
             print('Node %d' % rank, indices_local)
         else:
-            acc, _ = get_acc_and_loss(network, test_data, test_indices, args.T, args.n_classes,
+            acc, _ = get_acc_and_loss(network, test_data, test_indices, args.S_prime, args.n_classes,
                                       args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
             test_dict[0].append(acc)
             network.train()
@@ -121,20 +121,20 @@ def train(rank, num_nodes, args):
 
         for s in range(S):
             if rank == 0:
-                if s % S_prime == 0:
-                    if (1 + (s // S_prime)) % args.test_interval == 0:
-                        acc, _ = get_acc_and_loss(network, test_data, test_indices, args.T, args.n_classes,
+                if s % args.S_prime == 0:
+                    if (1 + (s // args.S_prime)) % args.test_interval == 0:
+                        acc, _ = get_acc_and_loss(network, test_data, test_indices, args.S_prime, args.n_classes,
                                                   args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
-                        test_dict[1 + (s // S_prime)].append(acc)
+                        test_dict[1 + (s // args.S_prime)].append(acc)
                         network.train()
                         print('Acc at step %d : %f' % (s, acc))
 
             dist.barrier(all_nodes)
 
             if rank != 0:
-                if s % S_prime == 0:  # at each example
+                if s % args.S_prime == 0:  # at each example
                     refractory_period(network)
-                    inputs, label = get_example(train_data, s // S_prime, S_prime, args.n_classes, args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
+                    inputs, label = get_example(train_data, s // args.S_prime, args.S_prime, args.n_classes, args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
                     sample = torch.cat((inputs, label), dim=0).to(network.device)
 
                 # lr decay
@@ -142,7 +142,7 @@ def train(rank, num_nodes, args):
                 #     args.lr /= 2
 
                 # Feedforward sampling
-                log_proba, ls_temp, et_temp, _ = feedforward_sampling(network, sample[:, s % S_prime], ls_temp, et_temp, args)
+                log_proba, ls_temp, et_temp, _ = feedforward_sampling(network, sample[:, s % args.S_prime], ls_temp, et_temp, args)
 
                 # Local feedback and update
                 eligibility_trace, et_temp, learning_signal, ls_temp = local_feedback_and_update(network, eligibility_trace, et_temp, learning_signal, ls_temp, s, args)
@@ -159,12 +159,12 @@ def train(rank, num_nodes, args):
         dist.barrier(all_nodes)
 
         if rank == 0:
-            global_acc, _ = get_acc_and_loss(network, test_data, test_indices, args.T, args.n_classes,
+            global_acc, _ = get_acc_and_loss(network, test_data, test_indices, args.S_prime, args.n_classes,
                                              args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
             print('Iteration: %d, final accuracy: %f' % (i, global_acc))
             test_dict[args.num_samples_train].append(global_acc)
         else:
-            _, loss = get_acc_and_loss(network, test_data, test_indices, args.T, args.n_classes,
+            _, loss = get_acc_and_loss(network, test_data, test_indices, args.S_prime, args.n_classes,
                                        args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
             test_dict[args.num_samples_train].append(loss)
         save_results(test_dict, test_save_path)
