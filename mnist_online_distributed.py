@@ -9,7 +9,7 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 import snn.utils.filters as filters
 from snn.utils.utils_snn import refractory_period, get_acc_and_loss
-from snn.utils.misc import save_results
+from snn.utils.misc import save_results, str2bool
 from snn.data_preprocessing.load_data import get_example
 
 from utils.training_fl_snn import feedforward_sampling, local_feedback_and_update
@@ -134,7 +134,8 @@ def train(rank, num_nodes, args):
             if rank != 0:
                 if s % args.S_prime == 0:  # at each example
                     refractory_period(network)
-                    inputs, label = get_example(train_data, s // args.S_prime, args.S_prime, args.n_classes, args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
+                    inputs, label = get_example(train_data, s // args.S_prime, args.S_prime, args.n_classes, args.input_shape, args.dt,
+                                                args.dataset.root.stats.train_data[1], args.polarity)
                     sample = torch.cat((inputs, label), dim=0).to(network.device)
 
                 # lr decay
@@ -246,6 +247,7 @@ if __name__ == "__main__":
 
     args.synaptic_filter = filters_dict[args.filter]
     args.n_basis_fb = 1
+    args.polarity = str2bool(args.polarity)
 
     processes = []
     for local_rank in range(n_processes):
