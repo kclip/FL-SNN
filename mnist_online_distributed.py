@@ -93,6 +93,7 @@ def train(rank, num_nodes, args):
     # Setup training parameters
     args.dataset = tables.open_file(args.dataset)
 
+    args.n_classes = args.dataset.root.stats.test_label[1]
     train_data = args.dataset.root.train
     test_data = args.dataset.root.test
 
@@ -231,7 +232,6 @@ if __name__ == "__main__":
     args.n_output_neurons = 10
     args.n_hidden_neurons = args.n_hidden_neurons
     args.n_neurons = args.n_input_neurons + args.n_output_neurons + args.n_hidden_neurons
-    args.n_classes = args.dataset.root.stats.test_label[1]
 
     filters_dict = {'base_ff_filter': filters.base_filter, 'cosine_basis': filters.cosine_basis,
                     'raised_cosine': filters.raised_cosine, 'raised_cosine_pillow_05': filters.raised_cosine_pillow_05, 'raised_cosine_pillow_08': filters.raised_cosine_pillow_08}
