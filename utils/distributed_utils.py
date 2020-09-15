@@ -125,7 +125,6 @@ def distribute_samples(nodes, rank, args):
             indices_worker_1[i * num_samples_per_class: (i + 1) * num_samples_per_class] =\
                 np.random.choice(misc.find_indices_for_labels(args.dataset.root.train, [label]), [num_samples_per_class], replace=True)
 
-
         # Send samples to the workers
         indices_local = torch.zeros([args.num_samples_train], dtype=torch.int)
         indices = [indices_local, torch.IntTensor(indices_worker_0), torch.IntTensor(indices_worker_1)]

@@ -135,12 +135,10 @@ def train(rank, num_nodes, args):
             if rank != 0:
                 if s % args.S_prime == 0:  # at each example
                     refractory_period(network)
-                    inputs, label = get_example(train_data, s // args.S_prime, args.S_prime, args.n_classes, args.input_shape, args.dt,
+                    inputs, label = get_example(train_data, indices_local[s // args.S_prime], args.S_prime, args.n_classes, args.input_shape, args.dt,
                                                 args.dataset.root.stats.train_data[1], args.polarity)
                     sample = torch.cat((inputs, label), dim=0).to(network.device)
 
-                    print(s, s % args.S_prime)
-                    print(torch.sum(inputs, dim=-1), torch.sum(label, dim=-1))
                 # lr decay
                 # if s % S / 4 == 0:
                 #     args.lr /= 2
