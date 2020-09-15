@@ -42,22 +42,3 @@ def local_feedback_and_update(network, eligibility_trace, et_temp, learning_sign
             network.get_parameters()[parameter] += args.lr * eligibility_trace[parameter]
 
     return eligibility_trace, et_temp, learning_signal, ls_temp
-
-
-def init_training(network, indices, args):
-    eligibility_trace_hidden = {parameter: network.get_gradients()[parameter][network.hidden_neurons - network.n_input_neurons] for parameter in network.get_gradients()}
-    eligibility_trace_output = {parameter: network.get_gradients()[parameter][network.output_neurons - network.n_input_neurons] for parameter in network.get_gradients()}
-
-    et_temp_hidden = {parameter: network.get_gradients()[parameter][network.hidden_neurons - network.n_input_neurons] for parameter in network.get_gradients()}
-    et_temp_output = {parameter: network.get_gradients()[parameter][network.output_neurons - network.n_input_neurons] for parameter in network.get_gradients()}
-
-    learning_signal = 0
-    ls_temp = 0
-
-    baseline_num = {parameter: eligibility_trace_hidden[parameter].pow(2) * learning_signal for parameter in eligibility_trace_hidden}
-    baseline_den = {parameter: eligibility_trace_hidden[parameter].pow(2) for parameter in eligibility_trace_hidden}
-
-    S_prime = tables.open_file(args.dataset).root.train.label[:].shape[-1]
-    S = len(indices[args.start_idx:]) * S_prime
-
-    return eligibility_trace_hidden, eligibility_trace_output, et_temp_hidden, et_temp_output, learning_signal, ls_temp, baseline_num, baseline_den, S_prime, S

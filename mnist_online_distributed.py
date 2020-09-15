@@ -22,7 +22,7 @@ Runs FL-SNN using two devices.
 """
 
 
-def train_fixed_rate(rank, num_nodes, net_params, args):
+def train_fixed_rate(rank, num_nodes, args):
     # Create network groups for communication
     all_nodes = dist.new_group([0, 1, 2], timeout=datetime.timedelta(0, 360000))
 
@@ -43,7 +43,6 @@ def train_fixed_rate(rank, num_nodes, net_params, args):
         for _ in range(args.num_ite):
             # Initialize main parameters for training
             network, indices_local, weights_list, eligibility_trace, et_temp, learning_signal, ls_temp = init_training(rank, num_nodes, all_nodes, args)
-            samples_indices_train = np.random.choice(indices_local, [args.num_samples_train], replace=True)
 
             # Gradients accumulator
             gradients_accum = torch.zeros(network.feedforward_weights.shape, dtype=torch.float)
@@ -100,6 +99,8 @@ def train(rank, num_nodes, args):
     args.S_prime = int(args.sample_length * 1000 / args.dt)
     S = args.num_samples_train * args.S_prime
 
+    print(args.S_prime, S)
+
     args, test_indices, test_dict, test_save_path = init_test(rank, args)
 
     for i in range(args.num_ite):
@@ -138,6 +139,8 @@ def train(rank, num_nodes, args):
                                                 args.dataset.root.stats.train_data[1], args.polarity)
                     sample = torch.cat((inputs, label), dim=0).to(network.device)
 
+                    print(s, s % args.S_prime)
+                    print(torch.sum(inputs, dim=-1), torch.sum(label, dim=-1))
                 # lr decay
                 # if s % S / 4 == 0:
                 #     args.lr /= 2

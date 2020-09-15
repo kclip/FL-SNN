@@ -102,7 +102,6 @@ def init_training(rank, num_nodes, nodes_group, args):
     eligibility_trace = {parameter: network.get_gradients()[parameter] for parameter in network.get_gradients()}
     et_temp = {parameter: network.get_gradients()[parameter] for parameter in network.get_gradients()}
 
-
     return network, indices_local, weights_list, eligibility_trace, et_temp, learning_signal, ls_temp
 
 
