@@ -122,11 +122,12 @@ def distribute_samples(nodes, rank, args):
         for i, label in enumerate(args.labels[:int(len(args.labels)/2)]):
             indices_worker_0[i * num_samples_per_class: (i + 1) * num_samples_per_class] =\
                 np.random.choice(misc.find_indices_for_labels(args.dataset.root.train, [label]), [num_samples_per_class], replace=True)
-            random.shuffle(indices_worker_0)
         for i, label in enumerate(args.labels[int(len(args.labels)/2):]):
             indices_worker_1[i * num_samples_per_class: (i + 1) * num_samples_per_class] =\
                 np.random.choice(misc.find_indices_for_labels(args.dataset.root.train, [label]), [num_samples_per_class], replace=True)
-            random.shuffle(indices_worker_1)
+
+        random.shuffle(indices_worker_0)
+        random.shuffle(indices_worker_1)
 
         # Send samples to the workers
         indices_local = torch.zeros([args.num_samples_train], dtype=torch.int)
