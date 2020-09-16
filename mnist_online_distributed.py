@@ -90,6 +90,9 @@ def train(rank, num_nodes, args):
     all_nodes = dist.new_group([0, 1, 2], timeout=datetime.timedelta(0, 360000))
 
     # Setup training parameters
+    args.name = args.dataset + r'_flsnn_%d_epochs_nh_%d_dt_%d_' % (args.num_samples_train, args.n_hidden_neurons, args.dt) + r'_pol_' + args.polarity + args.suffix
+    args.results_path = args.home + r'/results/'
+
     args.dataset = tables.open_file(args.dataset)
 
     args.n_classes = args.dataset.root.stats.test_label[1]

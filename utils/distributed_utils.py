@@ -30,11 +30,8 @@ def init_test(rank, args):
         test_indices = np.random.choice(np.arange(args.dataset.root.stats.test_data[0]), [args.num_samples_test], replace=False)
         args.labels = [i for i in range(10)]
 
-    name = args.dataset + r'_flsnn_%d_epochs_nh_%d_dt_%d_' % (args.num_samples_train, args.n_hidden_neurons, args.dt) + r'_pol_' + args.polarity + args.suffix
-    results_path = args.home + r'/results/'
-
     if args.save_path is None:
-        args.save_path = misc.mksavedir(pre=results_path, exp_dir=name)
+        args.save_path = misc.mksavedir(pre=args.results_path, exp_dir=args.name)
 
     if rank == 0:
         test_acc_save_path = args.save_path + r'/test_acc_master_%d_labels_tau_%d.pkl' % (len(args.labels), args.tau)
