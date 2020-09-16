@@ -239,10 +239,10 @@ if __name__ == "__main__":
 
     args.polarity = str2bool(args.polarity)
     if args.polarity:
-        args.n_input_neurons = int(2 * (args.dataset.root.stats.train_data[1] ** 2))
+        args.n_input_neurons = int(2 * (tables.open_file(args.dataset).root.stats.train_data[1] ** 2))
     else:
-        args.n_input_neurons = int(args.dataset.root.stats.train_data[1] ** 2)
-    args.n_output_neurons = args.dataset.root.stats.train_label[1]
+        args.n_input_neurons = int(tables.open_file(args.dataset).root.stats.train_data[1] ** 2)
+    args.n_output_neurons = tables.open_file(args.dataset).root.stats.train_label[1]
     args.n_neurons = args.n_input_neurons + args.n_output_neurons + args.n_hidden_neurons
 
     filters_dict = {'base_ff_filter': filters.base_filter, 'cosine_basis': filters.cosine_basis,
