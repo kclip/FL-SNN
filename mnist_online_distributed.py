@@ -90,9 +90,6 @@ def train(rank, num_nodes, args):
     all_nodes = dist.new_group([0, 1, 2], timeout=datetime.timedelta(0, 360000))
 
     # Setup training parameters
-    args.name = args.dataset + r'_flsnn_%d_epochs_nh_%d_dt_%d_' % (args.num_samples_train, args.n_hidden_neurons, args.dt) + r'_pol_' + args.polarity + args.suffix
-    args.results_path = args.home + r'/results/'
-
     args.dataset = tables.open_file(args.dataset)
 
     args.n_classes = args.dataset.root.stats.test_label[1]
@@ -237,9 +234,15 @@ if __name__ == "__main__":
     assert (args.world_size % n_processes == 0), 'Each node must have the same number of processes'
     assert (node_rank + n_processes) <= args.world_size, 'There are more processes specified than world_size'
 
-    args.n_input_neurons = 26**2
-    args.n_output_neurons = 10
-    args.n_hidden_neurons = args.n_hidden_neurons
+    args.name = args.dataset + r'_flsnn_%d_epochs_nh_%d_dt_%d_' % (args.num_samples_train, args.n_hidden_neurons, args.dt) + r'_pol_' + args.polarity + args.suffix
+    args.results_path = args.home + r'/results/'
+
+    args.polarity = str2bool(args.polarity)
+    if args.polarity:
+        args.n_input_neurons = int(2 * (args.dataset.root.stats.train_data[1] ** 2))
+    else:
+        args.n_input_neurons = int(args.dataset.root.stats.train_data[1] ** 2)
+    args.n_output_neurons = args.dataset.root.stats.train_label[1]
     args.n_neurons = args.n_input_neurons + args.n_output_neurons + args.n_hidden_neurons
 
     filters_dict = {'base_ff_filter': filters.base_filter, 'cosine_basis': filters.cosine_basis,
@@ -255,7 +258,6 @@ if __name__ == "__main__":
 
     args.synaptic_filter = filters_dict[args.filter]
     args.n_basis_fb = 1
-    args.polarity = str2bool(args.polarity)
 
     processes = []
     for local_rank in range(n_processes):
