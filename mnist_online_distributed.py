@@ -188,7 +188,7 @@ if __name__ == "__main__":
     parser.add_argument('--node_rank', type=int, help='Rank of the current node')
     parser.add_argument('--world_size', default=1, type=int, help='Total number of processes to run')
     parser.add_argument('--processes_per_node', default=1, type=int, help='Number of processes in the node')
-    parser.add_argument('--dataset', help='Path to the dataset', default='/home/k1804053/datasets/mnist-dvs/mnist_dvs_events.hdf5')
+    parser.add_argument('--dataset', help='Dataset to choose from', default='mnist_dvs')
     parser.add_argument('--labels', nargs='+', default=None, type=int)
 
     # Pytorch arguments
@@ -200,6 +200,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_samples_test', default=None, type=int, help='Number of samples to test on')
     parser.add_argument('--test_interval', default=40, type=int, help='Test interval')
     parser.add_argument('--rate', default=None, type=float, help='Fixed communication rate')
+    parser.add_argument('--home', default='/home')
     parser.add_argument('--results_path', default=None)
     parser.add_argument('--dt', default=25000, type=int, help='')
     parser.add_argument('--sample_length', default=2000, type=int, help='')
@@ -228,12 +229,23 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
+    args.name = args.dataset + r'_flsnn_%d_epochs_nh_%d_dt_%d_' % (args.num_samples_train, args.n_hidden_neurons, args.dt) + r'_pol_' + args.polarity
+
+    datasets = {'mnist_dvs': r'mnist_dvs_events.hdf5',
+                'dvs_gesture': r'dvs_gestures_events.hdf5'
+                }
+
+    if args.dataset[:5] == 'mnist':
+        args.dataset = args.home + r'/datasets/mnist-dvs/' + datasets[args.dataset]
+    elif args.dataset[:11] == 'dvs_gesture':
+        args.dataset = args.home + r'/datasets/DvsGesture/' + datasets[args.dataset]
+    else:
+        print('Error: dataset not found')
+
     node_rank = args.node_rank + args.node_rank*(args.processes_per_node - 1)
     n_processes = args.processes_per_node
     assert (args.world_size % n_processes == 0), 'Each node must have the same number of processes'
     assert (node_rank + n_processes) <= args.world_size, 'There are more processes specified than world_size'
-
-    args.name = args.dataset + r'_flsnn_%d_epochs_nh_%d_dt_%d_' % (args.num_samples_train, args.n_hidden_neurons, args.dt) + r'_pol_' + args.polarity
 
     args.polarity = str2bool(args.polarity)
     if args.polarity:
