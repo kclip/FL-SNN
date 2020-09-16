@@ -234,7 +234,7 @@ if __name__ == "__main__":
     assert (args.world_size % n_processes == 0), 'Each node must have the same number of processes'
     assert (node_rank + n_processes) <= args.world_size, 'There are more processes specified than world_size'
 
-    args.name = args.dataset + r'_flsnn_%d_epochs_nh_%d_dt_%d_' % (args.num_samples_train, args.n_hidden_neurons, args.dt) + r'_pol_' + args.polarity + args.suffix
+    args.name = args.dataset + r'_flsnn_%d_epochs_nh_%d_dt_%d_' % (args.num_samples_train, args.n_hidden_neurons, args.dt) + r'_pol_' + args.polarity
     args.results_path = args.home + r'/results/'
 
     args.polarity = str2bool(args.polarity)
