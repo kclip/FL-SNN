@@ -8,7 +8,7 @@ import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
 import snn.utils.filters as filters
-from snn.utils.utils_snn import refractory_period, get_acc_and_loss
+from snn.utils.utils_snn import refractory_period, get_acc_and_loss, get_acc_loss_and_spikes
 from snn.utils.misc import save_results, str2bool
 from snn.data_preprocessing.load_data import get_example
 
@@ -99,8 +99,6 @@ def train(rank, num_nodes, args):
     args.S_prime = int(args.sample_length * 1000 / args.dt)
     S = args.num_samples_train * args.S_prime
 
-    print(args.S_prime, S)
-
     args, test_indices, test_dict, test_save_path = init_test(rank, args)
 
     for i in range(args.num_ite):
@@ -113,9 +111,10 @@ def train(rank, num_nodes, args):
         if rank != 0:
             print('Node %d' % rank, indices_local)
         else:
-            acc, _ = get_acc_and_loss(network, test_data, test_indices, args.S_prime, args.n_classes,
-                                      args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
+            acc, _, spikes = get_acc_loss_and_spikes(network, test_data, test_indices, args.S_prime, args.n_classes,
+                                                     args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
             test_dict[0].append(acc)
+            np.save(args.save_path + r'/spikes_test_s_%d.npy' % 0, spikes.numpy())
             network.train()
 
         dist.barrier(all_nodes)
@@ -124,9 +123,11 @@ def train(rank, num_nodes, args):
             if rank == 0:
                 if s % args.S_prime == 0:
                     if (1 + (s // args.S_prime)) % args.test_interval == 0:
-                        acc, _ = get_acc_and_loss(network, test_data, test_indices, args.S_prime, args.n_classes,
-                                                  args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
+                        acc, _, spikes = get_acc_loss_and_spikes(network, test_data, test_indices, args.S_prime, args.n_classes,
+                                                                 args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
                         test_dict[1 + (s // args.S_prime)].append(acc)
+                        np.save(args.save_path + r'/spikes_test_s_%d.npy' % s, spikes.numpy())
+
                         network.train()
                         print('Acc at step %d : %f' % (s, acc))
 
@@ -161,10 +162,12 @@ def train(rank, num_nodes, args):
         dist.barrier(all_nodes)
 
         if rank == 0:
-            global_acc, _ = get_acc_and_loss(network, test_data, test_indices, args.S_prime, args.n_classes,
-                                             args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
-            print('Iteration: %d, final accuracy: %f' % (i, global_acc))
-            test_dict[args.num_samples_train].append(global_acc)
+            acc, _, spikes = get_acc_loss_and_spikes(network, test_data, test_indices, args.S_prime, args.n_classes,
+                                                     args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
+            print('Iteration: %d, final accuracy: %f' % (i, acc))
+            test_dict[args.num_samples_train].append(acc)
+            np.save(args.save_path + r'/spikes_test_s_%d.npy' % s, spikes.numpy())
+
         else:
             _, loss = get_acc_and_loss(network, test_data, test_indices, args.S_prime, args.n_classes,
                                        args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
@@ -198,6 +201,7 @@ if __name__ == "__main__":
     parser.add_argument('--test_interval', default=40, type=int, help='Test interval')
     parser.add_argument('--rate', default=None, type=float, help='Fixed communication rate')
     parser.add_argument('--save_path', default=None)
+    parser.add_argument('--home', type=str, default=None)
     parser.add_argument('--dt', default=25000, type=int, help='')
     parser.add_argument('--sample_length', default=2000, type=int, help='')
     parser.add_argument('--input_shape', nargs='+', default=[676], type=int, help='Shape of an input sample')

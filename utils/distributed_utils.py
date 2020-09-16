@@ -9,6 +9,7 @@ from snn.models.SNN import BinarySNN
 from snn.utils import misc, filters, utils_snn
 
 
+
 def init_processes(rank, world_size, backend, url, args, train_func):
     """"
     Initialize process group and launches training on the nodes
@@ -29,21 +30,21 @@ def init_test(rank, args):
         test_indices = np.random.choice(np.arange(args.dataset.root.stats.test_data[0]), [args.num_samples_test], replace=False)
         args.labels = [i for i in range(10)]
 
+    name = args.dataset + r'_flsnn_%d_epochs_nh_%d_dt_%d_' % (args.num_samples_train, args.n_h, args.dt) + r'_pol_' + args.polarity + args.suffix
+    results_path = args.home + r'/results/'
+
+    if args.save_path is None:
+        args.save_path = misc.mksavedir(pre=results_path, exp_dir=name)
+
     if rank == 0:
-        if args.save_path is None:
-            test_acc_save_path = os.getcwd() + r'/test_acc_master_%d_labels_tau_%d.pkl' % (len(args.labels), args.tau)
-        else:
-            test_acc_save_path = args.save_path + r'/test_acc_master_%d_labels_tau_%d.pkl' % (len(args.labels), args.tau)
+        test_acc_save_path = args.save_path + r'/test_acc_master_%d_labels_tau_%d.pkl' % (len(args.labels), args.tau)
         test_accs = {i: [] for i in range(0, args.num_samples_train, args.test_interval)}
         test_accs[args.num_samples_train] = []
 
         return args, test_indices, test_accs, test_acc_save_path
 
     else:
-        if args.save_path is None:
-            test_loss_save_path = os.getcwd() + r'/results/test_loss_%d_labels_node_%d_tau_%d.pkl' % (len(args.labels), rank, args.tau)
-        else:
-            test_loss_save_path = args.save_path + r'test_loss_%d_labels_node_%d_tau_%d.pkl' % (len(args.labels), rank, args.tau)
+        test_loss_save_path = args.save_path + r'test_loss_%d_labels_node_%d_tau_%d.pkl' % (len(args.labels), rank, args.tau)
 
         test_loss = {i: [] for i in range(0, args.num_samples_train, args.test_interval)}
         test_loss[args.num_samples_train] = []
