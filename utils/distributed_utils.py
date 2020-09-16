@@ -30,8 +30,8 @@ def init_test(rank, args):
         test_indices = np.random.choice(np.arange(args.dataset.root.stats.test_data[0]), [args.num_samples_test], replace=False)
         args.labels = [i for i in range(10)]
 
-    if args.save_path is None:
-        args.save_path = misc.mksavedir(pre=args.results_path, exp_dir=args.name)
+    print(args.name, isinstance(args.name, str))
+    args.save_path = misc.mksavedir(pre=args.results_path, exp_dir=args.name)
 
     if rank == 0:
         test_acc_save_path = args.save_path + r'/test_acc_master_%d_labels_tau_%d.pkl' % (len(args.labels), args.tau)

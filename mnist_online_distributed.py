@@ -200,8 +200,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_samples_test', default=None, type=int, help='Number of samples to test on')
     parser.add_argument('--test_interval', default=40, type=int, help='Test interval')
     parser.add_argument('--rate', default=None, type=float, help='Fixed communication rate')
-    parser.add_argument('--save_path', default=None)
-    parser.add_argument('--home', type=str, default=None)
+    parser.add_argument('--results_path', default=None)
     parser.add_argument('--dt', default=25000, type=int, help='')
     parser.add_argument('--sample_length', default=2000, type=int, help='')
     parser.add_argument('--input_shape', nargs='+', default=[676], type=int, help='Shape of an input sample')
@@ -235,7 +234,6 @@ if __name__ == "__main__":
     assert (node_rank + n_processes) <= args.world_size, 'There are more processes specified than world_size'
 
     args.name = args.dataset + r'_flsnn_%d_epochs_nh_%d_dt_%d_' % (args.num_samples_train, args.n_hidden_neurons, args.dt) + r'_pol_' + args.polarity
-    args.results_path = args.home + r'/results/'
 
     args.polarity = str2bool(args.polarity)
     if args.polarity:
