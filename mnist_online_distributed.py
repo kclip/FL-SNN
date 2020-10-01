@@ -114,7 +114,7 @@ def train(rank, num_nodes, args):
             acc, _, spikes = get_acc_loss_and_spikes(network, test_data, test_indices, args.S_prime, args.n_classes,
                                                      args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
             test_dict[0].append(acc)
-            np.save(args.save_path + r'/spikes_test_s_%d.npy' % 0, spikes.numpy())
+            # np.save(args.save_path + r'/spikes_test_s_%d.npy' % 0, spikes.numpy())
             network.train()
 
         dist.barrier(all_nodes)
@@ -166,7 +166,7 @@ def train(rank, num_nodes, args):
                                                      args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
             print('Iteration: %d, final accuracy: %f' % (i, acc))
             test_dict[args.num_samples_train].append(acc)
-            np.save(args.save_path + r'/spikes_test_s_%d.npy' % s, spikes.numpy())
+            # np.save(args.save_path + r'/spikes_test_s_%d.npy' % s, spikes.numpy())
 
         else:
             _, loss = get_acc_and_loss(network, test_data, test_indices, args.S_prime, args.n_classes,
