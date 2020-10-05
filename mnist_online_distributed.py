@@ -73,6 +73,9 @@ def train_fixed_rate(rank, num_nodes, args):
                     gradients_accum = torch.zeros(network.feedforward_weights.shape, dtype=torch.float)
                     dist.barrier(all_nodes)
 
+                    if rank == 0:
+                        print('s = %d, weights exchanged')
+
             if rank == 0:
                 global_acc, _ = get_acc_and_loss(network, test_data, test_indices, args.S_prime, args.n_classes,
                                                  args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
