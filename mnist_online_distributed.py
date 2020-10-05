@@ -73,9 +73,6 @@ def train_fixed_rate(rank, num_nodes, args):
                     gradients_accum = torch.zeros(network.feedforward_weights.shape, dtype=torch.float)
                     dist.barrier(all_nodes)
 
-                    if rank == 0:
-                        print('s = %d, weights exchanged')
-
             if rank == 0:
                 global_acc, _ = get_acc_and_loss(network, test_data, test_indices, args.S_prime, args.n_classes,
                                                  args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
@@ -129,7 +126,7 @@ def train(rank, num_nodes, args):
                         acc, _, spikes = get_acc_loss_and_spikes(network, test_data, test_indices, args.S_prime, args.n_classes,
                                                                  args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
                         test_dict[1 + (s // args.S_prime)].append(acc)
-                        np.save(args.save_path + r'/spikes_test_s_%d.npy' % s, spikes.numpy())
+                        # np.save(args.save_path + r'/spikes_test_s_%d.npy' % s, spikes.numpy())
 
                         network.train()
                         print('Acc at step %d : %f' % (s, acc))
@@ -158,6 +155,9 @@ def train(rank, num_nodes, args):
                 dist.barrier(all_nodes)
                 global_update(all_nodes, rank, network, weights_list)
                 dist.barrier(all_nodes)
+
+                if rank == 0:
+                    print('s = %d, weights exchanged')
 
         # Final global update
         dist.barrier(all_nodes)
