@@ -157,7 +157,7 @@ def train(rank, num_nodes, args):
                 dist.barrier(all_nodes)
 
                 if rank == 0:
-                    print('s = %d, weights exchanged')
+                    print('s = %d, weights exchanged' % (s + 1))
 
         # Final global update
         dist.barrier(all_nodes)
