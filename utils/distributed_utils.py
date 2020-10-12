@@ -32,17 +32,13 @@ def init_test(rank, args):
 
     args.save_path = misc.mksavedir(pre=args.home + args.results_path, exp_dir=args.name)
 
-    if rank == 0:
-        test_accs = {i: [] for i in range(0, args.num_samples_train, args.test_interval)}
-        test_accs[args.num_samples_train] = []
+    accs = {i: [] for i in range(0, args.num_samples_train, args.test_interval)}
+    accs[args.num_samples_train] = []
 
-        return args, test_indices, test_accs
+    losses = {i: [] for i in range(0, args.num_samples_train, args.test_interval)}
+    losses[args.num_samples_train] = []
 
-    else:
-        train_accs = {i: [] for i in range(0, args.num_samples_train, args.test_interval)}
-        train_accs[args.num_samples_train] = []
-
-        return args, test_indices, train_accs
+    return args, test_indices, losses, accs
 
 
 def init_training(rank, num_nodes, nodes_group, args):
