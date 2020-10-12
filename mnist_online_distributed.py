@@ -144,7 +144,7 @@ def train(rank, num_nodes, args):
                     if (1 + (s // args.S_prime)) % args.test_interval == 0:
                         train_acc, train_loss = get_acc_and_loss(network, train_data, find_indices_for_labels(train_data, args.local_labels), args.S_prime, args.n_classes, [1],
                                                                  args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
-                        save_dict_acc[s].append(train_acc)
+                        save_dict_acc[s // args.S_prime].append(train_acc)
                         save_dict_loss[s].append(train_loss)
                         network.train()
 
@@ -168,9 +168,6 @@ def train(rank, num_nodes, args):
                 dist.barrier(all_nodes)
                 global_update(all_nodes, rank, network, weights_list)
                 dist.barrier(all_nodes)
-
-                if rank == 0:
-                    print('s = %d, weights exchanged' % (s + 1))
 
         # Final global update
         dist.barrier(all_nodes)
