@@ -33,19 +33,16 @@ def init_test(rank, args):
     args.save_path = misc.mksavedir(pre=args.home + args.results_path, exp_dir=args.name)
 
     if rank == 0:
-        test_acc_save_path = args.save_path + r'/test_acc_master_%d_labels_tau_%d.pkl' % (len(args.labels), args.tau)
         test_accs = {i: [] for i in range(0, args.num_samples_train, args.test_interval)}
         test_accs[args.num_samples_train] = []
 
-        return args, test_indices, test_accs, test_acc_save_path
+        return args, test_indices, test_accs
 
     else:
-        test_loss_save_path = args.save_path + r'test_loss_%d_labels_node_%d_tau_%d.pkl' % (len(args.labels), rank, args.tau)
+        train_accs = {i: [] for i in range(0, args.num_samples_train, args.test_interval)}
+        train_accs[args.num_samples_train] = []
 
-        test_loss = {i: [] for i in range(0, args.num_samples_train, args.test_interval)}
-        test_loss[args.num_samples_train] = []
-
-        return args, test_indices, test_loss, test_loss_save_path
+        return args, test_indices, train_accs
 
 
 def init_training(rank, num_nodes, nodes_group, args):
