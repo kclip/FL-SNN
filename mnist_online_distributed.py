@@ -9,7 +9,7 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 import snn.utils.filters as filters
 from snn.utils.utils_snn import refractory_period, get_acc_and_loss, get_acc_loss_and_spikes
-from snn.utils.misc import save_results, str2bool
+from snn.utils.misc import save_results, str2bool, find_indices_for_labels
 from snn.data_preprocessing.load_data import get_example
 
 from utils.training_fl_snn import feedforward_sampling, local_feedback_and_update
@@ -109,7 +109,8 @@ def train(rank, num_nodes, args):
 
         # Test loss at beginning + selection of training indices
         if rank != 0:
-            train_acc, train_loss = get_acc_and_loss(network, train_data, indices_local, args.S_prime, args.n_classes, [1],
+            print(rank, args.local_labels)
+            train_acc, train_loss = get_acc_and_loss(network, train_data, find_indices_for_labels(train_data, args.local_labels), args.S_prime, args.n_classes, [1],
                                                      args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
             save_dict_acc[0].append(train_acc)
             save_dict_loss[0].append(train_loss)
@@ -141,7 +142,7 @@ def train(rank, num_nodes, args):
             if rank != 0:
                 if s % args.S_prime == 0:  # at each example
                     if (1 + (s // args.S_prime)) % args.test_interval == 0:
-                        train_acc, train_loss = get_acc_and_loss(network, train_data, indices_local, args.S_prime, args.n_classes, [1],
+                        train_acc, train_loss = get_acc_and_loss(network, train_data, find_indices_for_labels(train_data, args.local_labels), args.S_prime, args.n_classes, [1],
                                                                  args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
                         save_dict_acc[s].append(train_acc)
                         save_dict_loss[s].append(train_loss)
@@ -176,8 +177,8 @@ def train(rank, num_nodes, args):
         global_update(all_nodes, rank, network, weights_list)
         dist.barrier(all_nodes)
 
-        save_results(save_dict_acc, save_path + r'/acc.pkl')
-        save_results(save_dict_loss, save_path + r'/loss.pkl')
+        save_results(save_dict_acc, args.save_path + r'/acc.pkl')
+        save_results(save_dict_loss, args.save_path + r'/loss.pkl')
 
 
 

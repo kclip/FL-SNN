@@ -128,6 +128,7 @@ def distribute_samples(nodes, rank, args):
         indices_local = torch.IntTensor(np.hstack((indices_worker_0, indices_worker_1)))
 
     else:
+        args.local_labels = args.labels[int(len(args.labels)/2) * (rank - 1): int(len(args.labels)/2) * rank]
         indices_local = torch.zeros([args.num_samples_train], dtype=torch.int)
         dist.scatter(tensor=indices_local, src=0, scatter_list=[], group=nodes)
 
