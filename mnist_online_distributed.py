@@ -146,6 +146,10 @@ def train(rank, num_nodes, args):
                                                                  args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
                         save_dict_acc[1 + (s // args.S_prime)].append(train_acc)
                         save_dict_loss[1 + (s // args.S_prime)].append(train_loss)
+
+                        save_results(save_dict_acc, args.save_path + r'/acc.pkl')
+                        save_results(save_dict_loss, args.save_path + r'/loss.pkl')
+
                         network.train()
 
                     refractory_period(network)
