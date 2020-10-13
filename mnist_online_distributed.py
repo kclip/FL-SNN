@@ -140,7 +140,7 @@ def train(rank, num_nodes, args):
             dist.barrier(all_nodes)
 
             if rank != 0:
-                if s % args.test_interval == 0:
+                if (s + 1) % args.test_interval == 0:
                     train_acc, train_loss = get_acc_and_loss(network, train_data, find_indices_for_labels(train_data, args.local_labels), args.S_prime, args.n_classes, [1],
                                                              args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
                     save_dict_acc[s].append(train_acc)
