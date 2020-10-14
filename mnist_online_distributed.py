@@ -143,8 +143,8 @@ def train(rank, num_nodes, args):
                 if (s + 1) % args.test_interval == 0:
                     train_acc, train_loss = get_acc_and_loss(network, train_data, find_indices_for_labels(train_data, args.local_labels), args.S_prime, args.n_classes, [1],
                                                              args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
-                    save_dict_acc[s].append(train_acc)
-                    save_dict_loss[s].append(train_loss)
+                    save_dict_acc[s + 1].append(train_acc)
+                    save_dict_loss[s + 1].append(train_loss)
 
                     save_results(save_dict_acc, args.save_path + r'/acc.pkl')
                     save_results(save_dict_loss, args.save_path + r'/loss.pkl')
