@@ -20,7 +20,7 @@ def init_processes(rank, world_size, backend, url, args, train_func):
     return
 
 
-def init_test(rank, args):
+def init_test(args):
     args.num_samples_test = args.dataset.root.stats.test_data[0]
     if args.labels is not None:
         print(args.labels)
@@ -32,11 +32,12 @@ def init_test(rank, args):
 
     args.save_path = misc.mksavedir(pre=args.home + args.results_path, exp_dir=args.name)
 
-    accs = {i: [] for i in range(0, args.S_prime, args.test_interval)}
-    accs[args.S_prime] = []
+    S = args.num_samples_train * args.S_prime
+    accs = {i: [] for i in range(0, S, args.test_interval)}
+    accs[S] = []
 
-    losses = {i: [] for i in range(0, args.S_prime, args.test_interval)}
-    losses[args.S_prime] = []
+    losses = {i: [] for i in range(0, S, args.test_interval)}
+    losses[S] = []
 
     return args, test_indices, losses, accs
 

@@ -99,7 +99,7 @@ def train(rank, num_nodes, args):
     args.S_prime = int(args.sample_length * 1000 / args.dt)
     S = args.num_samples_train * args.S_prime
 
-    args, test_indices, save_dict_loss, save_dict_acc = init_test(rank, args)
+    args, test_indices, save_dict_loss, save_dict_acc = init_test(args)
 
     for i in range(args.num_ite):
         # Initialize main parameters for training
