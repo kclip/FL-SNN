@@ -110,7 +110,7 @@ def train(rank, num_nodes, args):
         # Test loss at beginning + selection of training indices
         if rank != 0:
             print(rank, args.local_labels)
-            acc, loss = get_acc_and_loss(network, test_data, find_indices_for_labels(train_data, args.labels), args.S_prime, args.n_classes, [1],
+            acc, loss = get_acc_and_loss(network, test_data, find_indices_for_labels(test_data, args.labels), args.S_prime, args.n_classes, [1],
                                                      args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
             save_dict_acc[0].append(acc)
             save_dict_loss[0].append(loss)
@@ -141,7 +141,7 @@ def train(rank, num_nodes, args):
 
             if rank != 0:
                 if (s + 1) % args.test_interval == 0:
-                    acc, loss = get_acc_and_loss(network, test_data, find_indices_for_labels(train_data, args.labels), args.S_prime, args.n_classes, [1],
+                    acc, loss = get_acc_and_loss(network, test_data, find_indices_for_labels(test_data, args.labels), args.S_prime, args.n_classes, [1],
                                                              args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
                     save_dict_acc[s + 1].append(acc)
                     save_dict_loss[s + 1].append(loss)
