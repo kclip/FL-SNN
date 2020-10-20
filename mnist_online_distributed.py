@@ -110,10 +110,10 @@ def train(rank, num_nodes, args):
         # Test loss at beginning + selection of training indices
         if rank != 0:
             print(rank, args.local_labels)
-            train_acc, train_loss = get_acc_and_loss(network, train_data, find_indices_for_labels(train_data, args.local_labels), args.S_prime, args.n_classes, [1],
+            acc, loss = get_acc_and_loss(network, test_data, find_indices_for_labels(train_data, args.labels), args.S_prime, args.n_classes, [1],
                                                      args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
-            save_dict_acc[0].append(train_acc)
-            save_dict_loss[0].append(train_loss)
+            save_dict_acc[0].append(acc)
+            save_dict_loss[0].append(loss)
             network.train()
         # else:
             # test_acc, test_loss, spikes = get_acc_loss_and_spikes(network, test_data, test_indices, args.S_prime, args.n_classes, [1],
@@ -129,25 +129,25 @@ def train(rank, num_nodes, args):
             # if rank == 0:
             #     if s % args.S_prime == 0:
             #         if (1 + (s // args.S_prime)) % args.test_interval == 0:
-                        # test_acc, test_loss, spikes = get_acc_loss_and_spikes(network, test_data, test_indices, args.S_prime, args.n_classes, [1],
-                        #                                                       args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
-                        # save_dict_acc[s].append(test_acc)
-                        # save_dict_loss[s].append(test_loss)
-
-                        # network.train()
-                        # print('Acc at step %d : %f' % (s, test_acc))
+            #             test_acc, test_loss, spikes = get_acc_loss_and_spikes(network, test_data, test_indices, args.S_prime, args.n_classes, [1],
+            #                                                                   args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
+            #             save_dict_acc[s].append(test_acc)
+            #             save_dict_loss[s].append(test_loss)
+            #
+            #             network.train()
+            #             print('Acc at step %d : %f' % (s, test_acc))
 
             dist.barrier(all_nodes)
 
             if rank != 0:
                 if (s + 1) % args.test_interval == 0:
-                    train_acc, train_loss = get_acc_and_loss(network, train_data, find_indices_for_labels(train_data, args.local_labels), args.S_prime, args.n_classes, [1],
+                    acc, loss = get_acc_and_loss(network, test_data, find_indices_for_labels(train_data, args.labels), args.S_prime, args.n_classes, [1],
                                                              args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
-                    save_dict_acc[s + 1].append(train_acc)
-                    save_dict_loss[s + 1].append(train_loss)
+                    save_dict_acc[s + 1].append(acc)
+                    save_dict_loss[s + 1].append(loss)
 
-                    save_results(save_dict_acc, args.save_path + r'/acc.pkl')
-                    save_results(save_dict_loss, args.save_path + r'/loss.pkl')
+                    save_results(save_dict_acc, args.save_path + r'/test_acc.pkl')
+                    save_results(save_dict_loss, args.save_path + r'/test_loss.pkl')
 
                     network.train()
 
@@ -178,14 +178,14 @@ def train(rank, num_nodes, args):
         global_update(all_nodes, rank, network, weights_list)
         dist.barrier(all_nodes)
 
-        if rank == 0:
-            test_acc, test_loss, spikes = get_acc_loss_and_spikes(network, test_data, test_indices, args.S_prime, args.n_classes, [1],
-                                                                  args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
-            save_dict_acc[args.S_prime].append(test_acc)
-            save_dict_loss[args.S_prime].append(test_loss)
+        # if rank == 0:
+        #     test_acc, test_loss, spikes = get_acc_loss_and_spikes(network, test_data, test_indices, args.S_prime, args.n_classes, [1],
+        #                                                           args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
+        #     save_dict_acc[S].append(test_acc)
+        #     save_dict_loss[S].append(test_loss)
 
-        network.train()
-        print('Acc at step %d : %f' % (s, test_acc))
+        # network.train()
+        # print('Acc at step %d : %f' % (s, test_acc))
 
         save_results(save_dict_acc, args.save_path + r'/acc.pkl')
         save_results(save_dict_loss, args.save_path + r'/loss.pkl')
