@@ -127,13 +127,16 @@ def train(rank, num_nodes, args):
 
         for s in range(S):
             if rank == 0:
-                if (s + 1) % args.test_interval:
+                if (s + 1) % args.test_interval == 0:
                     test_acc, test_loss, spikes = get_acc_loss_and_spikes(network, test_data, find_indices_for_labels(test_data, args.labels), args.S_prime, args.n_classes, [1],
                                                                               args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
                     save_dict_acc[s + 1].append(test_acc)
                     save_dict_loss[s + 1].append(test_loss)
 
                     network.train()
+                    save_results(save_dict_acc, args.save_path + r'/test_acc.pkl')
+                    save_results(save_dict_loss, args.save_path + r'/test_loss.pkl')
+
                     print('Acc at step %d : %f' % (s, test_acc))
 
             dist.barrier(all_nodes)
