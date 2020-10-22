@@ -181,7 +181,7 @@ def train(rank, num_nodes, args):
         dist.barrier(all_nodes)
 
         if rank == 0:
-            test_acc, test_loss, spikes = get_acc_loss_and_spikes(network, test_data, test_indices, args.S_prime, args.n_classes, [1],
+            test_acc, test_loss, spikes = get_acc_loss_and_spikes(network, test_data, find_indices_for_labels(test_data, args.labels), args.S_prime, args.n_classes, [1],
                                                                   args.input_shape, args.dt, args.dataset.root.stats.train_data[1], args.polarity)
             save_dict_acc[S].append(test_acc)
             save_dict_loss[S].append(test_loss)
