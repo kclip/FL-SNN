@@ -54,14 +54,15 @@ def train_fixed_rate(rank, num_nodes, args):
                         refractory_period(network)
                         inputs, label = get_example(train_data, s // args.S_prime, args.S_prime, args.n_classes, args.input_shape, args.dt, args.dataset.root.stats.train_data[1],
                                                     args.polarity)
-                        sample = torch.cat((inputs, label), dim=0).to(network.device)
+                        inputs = inputs.to(network.device)
+                        label = label.to(network.device)
 
                     # lr decay
                     # if (s + 1) % int(S / 4) == 0:
                     #     args.lr /= 2
 
                     # Feedforward sampling
-                    log_proba, ls_temp, et_temp, gradients_accum = feedforward_sampling(network, sample[:, s % args.S_prime], ls_temp, et_temp, args, gradients_accum)
+                    log_proba, ls_temp, et_temp, gradients_accum = feedforward_sampling(network, inputs[:, s % args.S_prime], label[:, s % args.S_prime], ls_temp, et_temp, args, gradients_accum)
 
                     # Local feedback and update
                     eligibility_trace, et_temp, learning_signal, ls_temp = local_feedback_and_update(network, eligibility_trace, et_temp, learning_signal, ls_temp, s, args)
@@ -157,14 +158,15 @@ def train(rank, num_nodes, args):
                     refractory_period(network)
                     inputs, label = get_example(train_data, indices_local[s // args.S_prime], args.S_prime, args.n_classes, [1], args.input_shape, args.dt,
                                                 args.dataset.root.stats.train_data[1], args.polarity)
-                    sample = torch.cat((inputs, label), dim=0).to(network.device)
+                    inputs = inputs.to(network.device)
+                    label = label.to(network.device)
 
                 # lr decay
                 # if s % S / 4 == 0:
                 #     args.lr /= 2
 
                 # Feedforward sampling
-                log_proba, ls_temp, et_temp, _ = feedforward_sampling(network, sample[:, s % args.S_prime], ls_temp, et_temp, args)
+                log_proba, ls_temp, et_temp, _ = feedforward_sampling(network, inputs[:, s % args.S_prime], label[:, s % args.S_prime], ls_temp, et_temp, args)
 
                 # Local feedback and update
                 eligibility_trace, et_temp, learning_signal, ls_temp = local_feedback_and_update(network, eligibility_trace, et_temp, learning_signal, ls_temp, s, args)

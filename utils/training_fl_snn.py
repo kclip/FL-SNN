@@ -2,8 +2,8 @@ import torch
 import tables
 
 
-def feedforward_sampling(network, example, ls, et, args, gradients_accum=None):
-    log_proba = network(example)
+def feedforward_sampling(network, inputs, outputs, ls, et, args, gradients_accum=None):
+    log_proba = network(inputs, outputs)
 
     # Accumulate learning signal
     proba_hidden = torch.sigmoid(network.potential[network.hidden_neurons - network.n_input_neurons])
