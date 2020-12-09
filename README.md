@@ -1,7 +1,8 @@
 # FL-SNN
 Code for Federated Neuromorphic Learning of Spiking Neural Networks for Low-Power Edge Intelligence (arXiv version: https://arxiv.org/abs/1910.09594)
 
-After a recent refactor, to run, this code requires to install our `snn` package, which can be found at https://github.com/kclip/snn
+To run, this code requires our `snn` package, which can be found at https://github.com/kclip/snn
+This repo will not be maintained actively, the latest working version of the snn is commit f352ea5042375d8c779f0ef893386d032c2b4c73
 
 # Run example
 An experiment can be run on the MNIST-DVS dataset by launching on each node
